@@ -3,19 +3,19 @@ close all;
 clear all;
 
 %import signal
-[Num,Fe] = audioread('./pianoSoundFiles/piano.wav');
+[Num,Fe] = audioread('./pianoSoundFiles/ech22.wav');
 
 
 
-surNum = zeros(length(2*length(Num)-1),1); %initialisation array d'acceuil du signal suréchantilloné de taille 2*Num-1
-for i =(1:length(Num(:,1)))
-	surNum(2*(i-1)+1,1) = Num(i,1); %attrib. des valeurs de num aux échantillons d'index 2k+1 de surNum
-	
-end
-for i =(1:length(Num(:,1))-1)
-	surNum(2*i,1) = 0.5*(Num(i,1)+Num(i+1,1));%attrib des valeurs moyennes
-end
-surFe = 2*Fe;
+% surNum = zeros(length(2*length(Num)-1),1); %initialisation array d'acceuil du signal suréchantilloné de taille 2*Num-1
+% for i =(1:length(Num(:,1)))
+% 	surNum(2*(i-1)+1,1) = Num(i,1); %attrib. des valeurs de num aux échantillons d'index 2k+1 de surNum
+% 	
+% end
+% for i =(1:length(Num(:,1))-1)
+% 	surNum(2*i,1) = 0.5*(Num(i,1)+Num(i+1,1));%attrib des valeurs moyennes
+% end
+% surFe = 2*Fe;
 %Num = surNum; %on veut garder le nom Num
 
 
@@ -51,10 +51,48 @@ T=(0:Te:(length(Num)-1)*Te);
 % 	spectrogram(Num(:,1),6000,0,6000,Fe,'yaxis');
 % end
 figure(2);
-spectrogram(Num(:,1),6000,0,6000,Fe,'yaxis');
-figure(3);
-spectrogram(surNum,12000,0,12000,surFe,'yaxis');
+spectro = spectrogram(Num(:,1),6000,0,6000,Fe,'yaxis');
+spectro = abs(spectro);
+imagesc(spectro);
 
+maximums = max(spectro);
+%figure(3);
+%spectrogram(Num(:,1),6000,0,6000,Fe,'yaxis');
+
+
+segments = length(spectro(1,:));%temporal segments
+resolution = length(spectro(:,1));%freq intervals
+
+%find the mean (used in threshold)
+MEAN = zeros(segments,1);
+for i = (1:segments)
+	MEAN(i,1) = mean(spectro(:,i))
+end
+MEAN(1,1) = mean(MEAN(:,1));
+MEAN = MEAN(1,1);
+
+%defining threshold
+threshold = MEAN * 150
+
+%creating array for extraction of VOI (values of interest) from the spectrogram
+VOI = zeros(segments,1);%matrix of VOI (which will later be converted in frequencies)
+
+%extraction of frequencies that are > than threshold
+for i = (1:segments), k=1
+	
+	for j = (1:resolution)
+		
+		if (spectro(j,i) > threshold)
+			VOI(i,k) = j;
+			k = k+1;
+		end
+	end
+end
+
+
+
+ 
 
 
 %wt = cwt(Num);
+
