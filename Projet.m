@@ -4,15 +4,19 @@ clear all;
 
 %import signal
 [Num,Fe] = audioread('./pianoSoundFiles/piano.wav');
+
+
+
 surNum = zeros(length(2*length(Num)-1),1); %initialisation array d'acceuil du signal suréchantilloné de taille 2*Num-1
 for i =(1:length(Num(:,1)))
 	surNum(2*(i-1)+1,1) = Num(i,1); %attrib. des valeurs de num aux échantillons d'index 2k+1 de surNum
 	
 end
 for i =(1:length(Num(:,1))-1)
-	surNum(2*i,1) = 0.5*(Num(i,1)+Num(i+1,1));
+	surNum(2*i,1) = 0.5*(Num(i,1)+Num(i+1,1));%attrib des valeurs moyennes
 end
-
+surFe = 2*Fe;
+%Num = surNum; %on veut garder le nom Num
 
 
 %stereo to mono
@@ -46,9 +50,10 @@ T=(0:Te:(length(Num)-1)*Te);
 % 	[Num,Fe] = audioread(strcat('./pianoSoundFiles/ech',int2str(i),'.wav'));
 % 	spectrogram(Num(:,1),6000,0,6000,Fe,'yaxis');
 % end
-
-%figure(2);
-%spectrogram(Num,6000,0,6000,44000,'yaxis')
+figure(2);
+spectrogram(Num(:,1),6000,0,6000,Fe,'yaxis');
+figure(3);
+spectrogram(surNum,12000,0,12000,surFe,'yaxis');
 
 
 
