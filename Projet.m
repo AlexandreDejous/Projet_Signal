@@ -3,7 +3,7 @@ close all;
 clear all;
 
 %import signal
-[Num,Fe] = audioread('./pianoSoundFiles/ech22.wav');
+[Num,Fe] = audioread('./pianoSoundFiles/ech4.wav');
 
 
 
@@ -72,27 +72,110 @@ MEAN(1,1) = mean(MEAN(:,1));
 MEAN = MEAN(1,1);
 
 %defining threshold
-threshold = MEAN * 150
+threshold = 20 % MEAN * 190 seuil facile 60 seuil difficile
 
 %creating array for extraction of VOI (values of interest) from the spectrogram
-VOI = zeros(segments,1);%matrix of VOI (which will later be converted in frequencies)
+VOI = zeros(resolution,segments);%matrix of VOI (which will later be converted in frequencies)
 
 %extraction of frequencies that are > than threshold
-for i = (1:segments), k=1
+for i = (1:segments)
 	
 	for j = (1:resolution)
 		
 		if (spectro(j,i) > threshold)
-			VOI(i,k) = j;
-			k = k+1;
+			VOI(j,i) = spectro(j,i);
+		end
+	end
+end
+
+figure(1);
+image(VOI);
+
+VOI2 = zeros(resolution,segments);
+
+%extraction of peak values from VOI
+for i = (1:segments)
+	
+	for j = (2:resolution-1)
+		
+		if ((VOI(j+1,i) < VOI(j,i)) && (VOI(j-1,i) < VOI(j,i)))
+			VOI2(j,i) = VOI(j,i);
+		end
+	end
+end
+
+figure(3);
+image(VOI2);
+
+funOrHar = zeros(resolution,segments);
+interval = 5; %marge d'erreur pour la détection d'harmoniques dans le domaine digital (celles ci ne prennent pas forcément des valeurs exactes)
+
+for i = (1:segments)
+	
+	for j = (1:resolution)
+		
+		if ((VOI2(j,i) ~= 0) && (funOrHar(j,i) ~= 2))%si on détecte une freq dans VOI2 et que celle ci n'est pas une harmonique ( != 2 dans funOrHar )
+			funOrHar(j,i) = 1; %la noter comme fondamentale (mettre = 1)
+			for multiple = (2:7) %parcourir les possibles positions de ses harmoniques (multiples de la fondamentale) et les noter comme telles dans funOrHar ( mettre = 2)
+				for k = (((multiple*j)-interval):((multiple*j)+interval)) %si j = 200 et multiple = 2 alors cela parcourt les harmoniques (398,399,400,401,402) (pas seulement 400 pour avoir une marge d'erreur)
+					if(k <= length(funOrHar(:,1)))
+						funOrHar(k,i) = 2; %2 correspond à une harmonique
+					end
+				end
+			end
+		end
+	end
+end
+
+
+score = zeros(resolution,segments); %contient un score donné à chaque fondamentale
+interval2 = 2;
+for i = (1:segments)
+	
+	for j = (1:resolution)
+		
+		if ((VOI2(j,i) ~= 0) && (funOrHar(j,i) == 1))%si on détecte une freq dans VOI2 et que celle ci est fondamentale
+			for multiple = (2:7) %parcourir les possibles positions de ses harmoniques (multiples de la fondamentale) et les noter comme telles dans funOrHar ( mettre = 2)
+				for k = (((multiple*j)-interval2):((multiple*j)+interval2)) %si j = 200 et multiple = 2 alors cela parcourt les harmoniques (398,399,400,401,402) (pas seulement 400 pour avoir une marge d'erreur)
+					score(j,i) = score(j,i) + VOI2(j,i); %2 correspond à une harmonique
+				end
+			end
 		end
 	end
 end
 
 
 
- 
 
+figure(4);
+image(funOrHar,'CDataMapping','scale');
+colorbar;
+
+figure(5);
+image(score,'CDataMapping','scale');
+colorbar;
+
+thresholdScore = 2500;
+
+VOI3 = zeros(resolution,segments);
+
+for i = (1:segments)
+	
+	for j = (2:resolution-1)
+		
+		if (score(j,i)>thresholdScore)
+			VOI3(j,i) = VOI(j,i);
+		end
+	end
+end
+
+figure(6);
+image(VOI3,'CDataMapping','scale');
+colorbar;
 
 %wt = cwt(Num);
-
+%Step 1 : faire une matrix de taille "originale" ou on met les valeurs au dela d'un certain seuil (VOI)
+%Step 2 : considérer les maximas locaux comme des notes , enlever ce qu'il y a autour (VOI2)
+%Step 3 : Créer une matrice de taille originale (funOrHar) pour classifier les notes 0=rien, 1 = fondamentale, 2 = harmonique
+%en parrallèle, attribuer les scores aux notes de VOI2 dans VOI3 en vérifiant leur classification dans funOrHar et en les classifiant petit à petit
+%
