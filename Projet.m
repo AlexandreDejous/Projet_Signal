@@ -2,7 +2,15 @@ clc;
 close all;
 clear all;
 
-%import signal
+%import signal pour creation sample
+[Sample,FeSample] = audioread('./pianoSoundFiles/piano.wav');
+%stereo to mono
+Sample(:,1) = (Sample(:,1) + Sample(:,2)) / 2;
+Sample(:,2) = [];
+Te = 1/FeSample;
+Sample = Sample(53759:79821);
+
+%import signal pour reconnaissance de notes
 [Num,Fe] = audioread('./pianoSoundFiles/ech5.wav');
 
 
@@ -50,11 +58,13 @@ T=(0:Te:(length(Num)-1)*Te);
 % 	[Num,Fe] = audioread(strcat('./pianoSoundFiles/ech',int2str(i),'.wav'));
 % 	spectrogram(Num(:,1),6000,0,6000,Fe,'yaxis');
 % end
+
+
 spectroParam = 6000;
-figure(2);
+%figure(2);
 spectro = spectrogram(Num(:,1),spectroParam,0,spectroParam,Fe,'yaxis');
 spectro = abs(spectro);
-imagesc(spectro);
+%imagesc(spectro);
 
 maximums = max(spectro);
 
@@ -88,8 +98,8 @@ for i = (1:segments)
 	end
 end
 
-figure(1);
-image(VOI);
+% figure(1);
+% image(VOI);
 
 VOI2 = zeros(resolution,segments);
 
@@ -104,8 +114,8 @@ for i = (1:segments)
 	end
 end
 
-figure(3);
-image(VOI2);
+% figure(3);
+% image(VOI2);
 
 funOrHar = zeros(resolution,segments);
 interval = 5; %marge d'erreur pour la détection d'harmoniques dans le domaine digital (celles ci ne prennent pas forcément des valeurs exactes)
@@ -147,13 +157,13 @@ end
 
 
 
-figure(4);
-image(funOrHar,'CDataMapping','scale');
-colorbar;
-
-figure(5);
-image(score,'CDataMapping','scale');
-colorbar;
+% figure(4);
+% image(funOrHar,'CDataMapping','scale');
+% colorbar;
+% 
+% figure(5);
+% image(score,'CDataMapping','scale');
+% colorbar;
 
 
 %En fonction du score, on décide de garder ou pas la valeur détectée
@@ -171,9 +181,9 @@ for i = (1:segments)
 	end
 end
 
-figure(6);
-image(VOI3,'CDataMapping','scale');
-colorbar;
+% figure(6);
+% image(VOI3,'CDataMapping','scale');
+% colorbar;
 
 %On convertit cette valeur (prise dans VOI3) en fréquence puis note de musique
 
@@ -233,6 +243,7 @@ ylim([1,length(frequencies)]);
 yticklabels({'C0','C1','C2','C3','C4','C5'});
 
 
+
 %récupération des VOI depuis VOI3 en fonction du temps dans freq puis conversion en fréquences
 % for i = (1:segments)
 % 	
@@ -243,6 +254,45 @@ yticklabels({'C0','C1','C2','C3','C4','C5'});
 % 		end
 % 	end
 % end
+
+%---------------------------------------PARTIE 2 : GENERATION DE NOTES-----------------------------------------
+
+base = 261.6 %frequence du piano sample (C4)
+output = zeros(segments*spectroParam,1);%signal généré en fonction des notes extraites ci dessus (x,1)
+
+for i = (1:length(freq(1,:)))%parcourt les segments
+	for j = (1:length(freq(:,1)))%parcourt l'axe des fréquences (si il est > 1)
+		if ((freq(j,i)==0))%check si toute la partie freq(i,:) sont tous à 0 (continuer pour cette valeur de i ne sert alors à rien)
+			break;
+		end
+		if(freq(j,i)~=0)
+			mulToFreq = base/frequencies(freq(j,i));
+			[N,D] = rat(mulToFreq);
+			currentSample = resample(Sample,N,D);
+			wIndexes = ((((i-1)*spectroParam)+1):((i*spectroParam)));%les indexes du signal output sur lesquels doit on ecrire a present
+            length(output(wIndexes))
+            length(currentSample(1:spectroParam))
+			output(wIndexes) = output(wIndexes) + currentSample(1:spectroParam);%écriture par somme signal sample + signal output (index:index2)
+		end
+	end
+end
+
+
+%plot the generated signal
+% TeOut = 1/Fe;
+% NOut=length(output);
+% TOut=(0:Te:(length(output)-1)*TeOut);
+% figure(8);
+% plot(TOut,output);
+
+%play the generated signal
+%sound(output,44100);
+
+
+
+
+
+
 
 
 %Step 1 : faire une matrix de taille "originale" ou on met les valeurs au dela d'un certain seuil (VOI)

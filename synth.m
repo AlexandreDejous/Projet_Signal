@@ -28,7 +28,7 @@ plot(F,abs(fftshift(FNum)));
 %FNUM = cat (1,FNum, FNum)
 %complex(zeros(1,5),ones(1,5))
 
-Num = resample(Num,1,2);
+Num = resample(Num,2,1);
 T=(0:Te:(length(Num)-1)*Te);
 %shiftNb = 5000
 %Fnum = 
