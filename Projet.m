@@ -3,7 +3,7 @@ close all;
 clear all;
 
 %import signal
-[Num,Fe] = audioread('./pianoSoundFiles/ech4.wav');
+[Num,Fe] = audioread('./pianoSoundFiles/piano.wav');
 
 
 
@@ -173,9 +173,12 @@ figure(6);
 image(VOI3,'CDataMapping','scale');
 colorbar;
 
-%wt = cwt(Num);
+
+
+
 %Step 1 : faire une matrix de taille "originale" ou on met les valeurs au dela d'un certain seuil (VOI)
 %Step 2 : considérer les maximas locaux comme des notes , enlever ce qu'il y a autour (VOI2)
 %Step 3 : Créer une matrice de taille originale (funOrHar) pour classifier les notes 0=rien, 1 = fondamentale, 2 = harmonique
 %en parrallèle, attribuer les scores aux notes de VOI2 dans VOI3 en vérifiant leur classification dans funOrHar et en les classifiant petit à petit
 %
+
