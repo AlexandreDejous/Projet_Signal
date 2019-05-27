@@ -11,7 +11,7 @@ Te = 1/FeSample;
 Sample = Sample(53759:79821);
 
 %import signal pour reconnaissance de notes
-[Num,Fe] = audioread('./pianoSoundFiles/ech5.wav');
+[Num,Fe] = audioread('./pianoSoundFiles/piano.wav');
 
 
 
@@ -61,10 +61,10 @@ T=(0:Te:(length(Num)-1)*Te);
 
 
 spectroParam = 6000;
-%figure(2);
+figure(2);
 spectro = spectrogram(Num(:,1),spectroParam,0,spectroParam,Fe,'yaxis');
 spectro = abs(spectro);
-%imagesc(spectro);
+imagesc(spectro);
 
 maximums = max(spectro);
 
@@ -181,9 +181,9 @@ for i = (1:segments)
 	end
 end
 
-% figure(6);
-% image(VOI3,'CDataMapping','scale');
-% colorbar;
+figure(6);
+image(VOI3,'CDataMapping','scale');
+colorbar;
 
 %On convertit cette valeur (prise dans VOI3) en fréquence puis note de musique
 
@@ -277,16 +277,37 @@ for i = (1:length(freq(1,:)))%parcourt les segments
 	end
 end
 
-
-%plot the generated signal
+%plot the generated signal and its frequency
 % TeOut = 1/Fe;
 % NOut=length(output);
 % TOut=(0:Te:(length(output)-1)*TeOut);
 % figure(8);
 % plot(TOut,output);
+% fOut = (  -Fe/2 : Fe/NOut : ((NOut/2)-1)*(Fe/NOut)  );
+% FOut = fft(output);
+% figure(8);
+% plot(fOut,abs(fftshift(FOut)));
+
+%watermarking
+[Water,Fe] = audioread('./watermark_DB.wav');
+Water = Water / 12;
+output(1:length(Water)) = output(1:length(Water))+Water;
+
+
+%plot the watermarked signal frequency
+% FOut = fft(output);
+% figure(9);
+% plot(fOut,abs(fftshift(FOut)));
 
 %play the generated signal
-%sound(output,44100);
+sound(output,44100);
+
+%decodage
+
+
+
+
+
 
 
 
