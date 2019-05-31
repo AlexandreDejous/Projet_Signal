@@ -1,3 +1,0 @@
-waterObject = imread('Dejous_Beffa.png');
-
-imshow(waterObject);
