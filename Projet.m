@@ -293,7 +293,10 @@ end
 %Water = Water / 12;
 %output(1:length(Water)) = output(1:length(Water))+Water;
 waterObject = imread('Dejous_Beffa.png');
+waterObject = rgb2gray(waterObject);
 output = encode(output,waterObject);
+
+
 
 
 %plot the watermarked signal frequency
@@ -304,9 +307,13 @@ output = encode(output,waterObject);
 %play the generated signal
 sound(output,44100);
 
-extractedWaterObject = decode(output,length(waterObject(:,1,1)));
 figure(10);
-image(extractedWaterObject);
+imshow(waterObject);
+
+dimension = length(waterObject(:,1));
+extractedWaterObject = decode(output,dimension);
+figure(11);
+imshow(extractedWaterObject);
 %decodage
 
 
