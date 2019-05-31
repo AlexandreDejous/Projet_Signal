@@ -17,6 +17,7 @@ function result = encode(signal, im)
 	for i = 1:imBitsL%writes information on less significant bits of the signal                  
 		signalBits(i, 8) = dec2bin(im1D(i)); 
 	end 
-	signal = bin2dec(signalBits);%
+
+	signal = bin2dec(signalBits);
 	signal = (double(signal)/255 - 0.5);
 	result = signal;
